@@ -1,4 +1,22 @@
+This repository contains two ways to run the analysis, depending on your local environment setup.
 
+🟢 1. Basic AI Inference (Lightweight)
+Best for: Quick verification of the AI model and activity classification logic.
+
+Main File: main.ipynb
+
+Requirements: ultralytics, opencv-python
+
+Description: This version runs the detection and tracking logic directly on the video file. It displays the results in a standard output window without the need for Docker, PostgreSQL, or Kafka. It is the fastest way to see the "Arm-Only Motion" logic in action.
+
+🔵 2. Full Stack Production Pipeline (Dashboard + Database)
+Best for: Evaluating the complete data engineering and monitoring infrastructure.
+
+Main File: app.py
+
+Infrastructure: docker-compose.yaml
+
+Description: This is the professional, containerized version of the project. It simulates a real-world mining environment where telemetry data is streamed to a PostgreSQL database and visualized on a real-time Streamlit dashboard.
 
 
 
