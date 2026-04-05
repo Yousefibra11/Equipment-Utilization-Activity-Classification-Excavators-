@@ -24,9 +24,19 @@ System ArchitectureThis project is built as a modular microservice pipeline desi
 
 🧠 The Articulated Equipment ChallengeThe Problem: In heavy industry, an excavator is often "Active" while its tracks are stationary. Standard object detection (bounding boxes) fails here because the box coordinates $(x,y)$ of the machine don't change, leading to false "Idle" reports.
 
-🛡️ The Technical Solution: Centroid-Based Segment TrackingI implemented Instance Segmentation to treat the Excavator as an articulated assembly rather than a single static block.Mask Isolation: The model isolates the Bucket mask as a unique sub-entity.Euclidean Motion Detection: Even if the chassis movement is $0$, the system calculates the movement of the bucket centroid across a 15-frame buffer using the distance formula:$$d = \sqrt{(x_2 - x_1)^2 + (y_2 - y_1)^2}$$Dynamic Thresholding: If $d > 5$ pixels, the system overrides the "Stationary" status and marks the equipment as ACTIVE (Arm Motion).🚦 Activity Classification LogicInstead of a single "Action" model, the system uses Spatial Interaction Zones for high-speed inference.⛏️ DIGGINGZone: Bucket is in the lower 40% of the frame.Trigger: Bucket Centroid movement d >threshold.
+🛡️ The Technical Solution: Centroid-Based Segment TrackingI implemented Instance Segmentation to treat the Excavator as an articulated assembly rather than a single static block.Mask Isolation: The model isolates the Bucket mask as a unique sub-entity.Euclidean Motion Detection: Even if the chassis movement is $0$, the system calculates the movement of the bucket centroid across a 15-frame buffer using the distance formula:$$
+d = \sqrt{(x_t - x_{t-15})^2 + (y_t - y_{t-15})^2}
+$$ 
+Dynamic Thresholding: If $d > 5$ pixels, the system overrides the "Stationary" status and marks the equipment as ACTIVE (Arm Motion).🚦 Activity Classification LogicInstead of a single "Action" model, the system uses Spatial Interaction Zones for high-speed inference.⛏️ DIGGINGZone: Bucket is in the lower 40% of the frame.Trigger: Bucket Centroid movement d >threshold.
 
 DUMPINGZone: Bucket Centroid enters a 100px proximity zone above a Truck.Trigger: Centroid deceleration and spatial overlap detected.
 IDLEZone: Bucket and Chassis remain within center-point noise limits.Trigger: No movement detected for $> 5$ seconds.
-Design Decisions & Trade-offsYOLOv8-Segmentation vs. Standard DetectionBenefit: Allows for high-precision tracking of articulated parts (buckets/arms).Trade-off: Higher computational cost (approx. 30% slower than YOLOv8-detect).Docker-Compose vs. Manual SetupBenefit: Guaranteed environment parity; .
-Trade-off: Requires significant local RAM (approx. 4GB) to run the Kafka and Postgres containers.Apache Kafka vs. Local CSVBenefit: Makes the system "Production-Ready"—data can be streamed to multiple dashboards simultaneously.Trade-off: Adds networking complexity for local development.15-Frame Temporal BufferBenefit: Eliminates "flicker" and false state changes caused by lighting or minor occlusions.Trade-off: Introduces a minor 0.5s lag in the real-time UI.
+Design Decisions & Trade-offsYOLOv8-Segmentation vs. Standard DetectionBenefit: 
+Allows for high-precision tracking of articulated parts (buckets/arms).
+Trade-off: Higher computational cost (approx. 30% slower than YOLOv8-detect).
+Docker-Compose vs. Manual SetupBenefit: Guaranteed environment parity; 
+Trade-off: Requires significant local RAM (approx. 4GB) to run the Kafka and Postgres containers.
+Apache Kafka vs. Local CSVBenefit: Makes the system "Production-Ready"—data can be streamed to multiple dashboards simultaneously;
+Trade-off: Adds networking complexity for local development.
+15-Frame Temporal BufferBenefit: Eliminates "flicker" and false state changes caused by lighting or minor occlusions;
+Trade-off: Introduces a minor 0.5s lag in the real-time UI.
